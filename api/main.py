@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import sys
+sys.path.append("..")
+from core.model import LivingModel, ModelConfig
 
 app = FastAPI(
     title="PandoraAGI",
@@ -14,6 +18,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+model = LivingModel()
+
+class GenerateRequest(BaseModel):
+    prompt: str
+
+@app.on_event("startup")
+async def startup():
+    model.load()
+
 @app.get("/")
 def root():
     return {
@@ -26,3 +39,20 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.post("/generate")
+def generate(request: GenerateRequest):
+    output = model.generate(request.prompt)
+    return {
+        "prompt": request.prompt,
+        "output": output,
+        "model": model.config.model_name,
+        "version": model.config.version
+    }
+
+@app.get("/lineage")
+def lineage():
+    return {
+        "version": model.config.version,
+        "lineage": model.config.lineage
+    }
