@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import dynamic from 'next/dynamic'
+
+const ParticleNetwork = dynamic(() => import('./components/ParticleNetwork'), { ssr: false })
 
 export default function Home() {
   const [prompt, setPrompt] = useState('')
@@ -35,8 +38,10 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col">
-      <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
+    <main className="min-h-screen bg-black/10 text-white flex flex-col relative z-10">
+      <ParticleNetwork />
+
+      <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between backdrop-blur-sm bg-black/40">
         <div>
           <h1 className="text-xl font-bold tracking-tight">PandoraAGI</h1>
           <p className="text-xs text-zinc-500">AGI should belong to humanity</p>
@@ -54,8 +59,8 @@ export default function Home() {
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-xl px-4 py-3 rounded text-sm leading-relaxed ${
               msg.role === 'user'
-                ? 'bg-zinc-800 text-white'
-                : 'bg-zinc-900 border border-zinc-800 text-zinc-200'
+                ? 'bg-zinc-800/80 backdrop-blur-sm text-white'
+                : 'bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 text-zinc-200'
             }`}>
               {msg.content}
             </div>
@@ -63,7 +68,7 @@ export default function Home() {
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded text-sm text-zinc-500">
+            <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 px-4 py-3 rounded text-sm text-zinc-500">
               thinking...
             </div>
           </div>
@@ -71,10 +76,10 @@ export default function Home() {
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-zinc-800 px-6 py-4 max-w-3xl w-full mx-auto">
+      <div className="border-t border-zinc-800 px-6 py-4 max-w-3xl w-full mx-auto backdrop-blur-sm bg-black/40">
         <div className="flex gap-3">
           <input
-            className="flex-1 bg-zinc-900 border border-zinc-800 rounded px-4 py-2 text-sm text-white placeholder-zinc-600 outline-none focus:border-zinc-600"
+            className="flex-1 bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded px-4 py-2 text-sm text-white placeholder-zinc-600 outline-none focus:border-zinc-600"
             placeholder="Talk to PandoraAGI..."
             value={prompt}
             onChange={e => setPrompt(e.target.value)}
