@@ -56,3 +56,15 @@ def lineage():
         "version": model.config.version,
         "lineage": model.config.lineage
     }
+
+@app.get("/memory")
+def get_memory():
+    return {
+        "stats": model.memory.stats(),
+        "context": model.memory.get_context(last_n=20)
+    }
+
+@app.delete("/memory")
+def clear_memory():
+    model.memory.clear()
+    return {"status": "memory cleared"}

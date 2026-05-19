@@ -1,6 +1,7 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 from .config import ModelConfig
+from .memory import Memory
 
 
 class LivingModel:
@@ -8,6 +9,7 @@ class LivingModel:
         self.config = config or ModelConfig()
         self.tokenizer = None
         self.model = None
+        self.memory = Memory()
 
     def load(self):
         print(f"[PandoraAGI] Loading model: {self.config.model_name}")
@@ -23,7 +25,18 @@ class LivingModel:
         if self.model is None:
             raise RuntimeError("Model not loaded. Call load() first.")
 
-        inputs = self.tokenizer(prompt, return_tensors="pt")
+        self.memory.add("user", prompt)
+
+        context = self.memory.get_context(last_n=10)
+        conversation = ""
+        for msg in context:
+            if msg["role"] == "user":
+                conversation += f"User: {msg['content']}\n"
+            else:
+                conversation += f"Assistant: {msg['content']}\n"
+        conversation += "Assistant:"
+
+        inputs = self.tokenizer(conversation, return_tensors="pt")
         input_length = inputs["input_ids"].shape[1]
 
         with torch.no_grad():
@@ -37,7 +50,11 @@ class LivingModel:
             )
 
         new_tokens = outputs[0][input_length:]
-        return self.tokenizer.decode(new_tokens, skip_special_tokens=True)
+        response = self.tokenizer.decode(new_tokens, skip_special_tokens=True)
+
+        self.memory.add("assistant", response)
+
+        return response
 
     def log_lineage(self, entry: str):
         self.config.lineage.append(entry)
